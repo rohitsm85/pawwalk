@@ -46,37 +46,66 @@ export default function BookingForm() {
   };
 
   return (
-    <div>
-      <h1>Dog Walking Booking</h1>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      background: "linear-gradient(to right, #667eea, #764ba2)",
+      fontFamily: "Arial"
+    }}>
+      <div style={{
+        background: "#fff",
+        padding: "30px",
+        borderRadius: "12px",
+        width: "320px",
+        boxShadow: "0 10px 25px rgba(0,0,0,0.2)"
+      }}>
+        <h2 style={{ textAlign: "center" }}>🐶 PawWalk</h2>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          placeholder="Your Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <br /><br />
+        <form onSubmit={handleSubmit}>
+          <input
+            placeholder="Your Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          />
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-        <br /><br />
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+          />
 
-        <select value={time} onChange={(e) => setTime(e.target.value)}>
-          <option value="">Select Time Slot</option>
-          {timeSlots.map((slot) => (
-            <option key={slot} value={slot} disabled={isBooked(slot)}>
-              {slot} {isBooked(slot) ? "(Booked)" : ""}
-            </option>
-          ))}
-        </select>
+          <select
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            style={{ width: "100%", padding: "10px", marginBottom: "15px" }}
+          >
+            <option value="">Select Time</option>
+            {timeSlots.map((slot) => (
+              <option key={slot} value={slot} disabled={isBooked(slot)}>
+                {slot} {isBooked(slot) ? "(Booked)" : ""}
+              </option>
+            ))}
+          </select>
 
-        <br /><br />
-
-        <button type="submit">Book</button>
-      </form>
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: "#667eea",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px"
+            }}
+          >
+            Book Walk 🐾
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
