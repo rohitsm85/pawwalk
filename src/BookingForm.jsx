@@ -1,7 +1,7 @@
 // src/components/BookingForm.jsx  ← adapt to your actual filename
 import { useState } from "react";
-import { useAuth } from "../hooks/useAuth";
-import { useBooking } from "../hooks/useBooking";
+import { useAuth } from "./hooks/useAuth";
+import { useBooking } from "./hooks/useBooking";
 
 export default function BookingForm() {
   const { user, authReady } = useAuth();
