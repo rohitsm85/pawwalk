@@ -1,4 +1,2 @@
-body {
-  margin: 0;
-  font-family: sans-serif;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #6b82d6; }
