@@ -8,7 +8,7 @@ export function useBooking(user) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const submitBooking = async ({ ownerName, dogName, date, time, notes }) => {
+  const submitBooking = async ({ ownerName, dogName, email, date, time, notes }) => {
     if (!user) return;
 
     setLoading(true);
@@ -20,6 +20,7 @@ export function useBooking(user) {
         userId: user.uid,
         ownerName,
         dogName,
+        email,
         date,
         time,
         notes: notes || "",

@@ -1,13 +1,130 @@
 rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: walks
+// Document ID: auto-generated
+// Fields:
+//   - userId: string (required, immutable) - Firebase Auth uid of the
+//       submitter (anonymous auth). Must match request.auth.uid.
+//   - ownerName: string (required, immutable, 1-100 chars)
+//   - dogName: string (required, immutable, 1-100 chars)
+//   - email: string (required, immutable, valid email, <=200 chars) -
+//       client's email, used to send booking-outcome notifications.
+//   - date: string (required, immutable, "YYYY-MM-DD")
+//   - time: string (required, immutable, "HH:MM")
+//   - notes: string (optional, immutable, <=500 chars)
+//   - status: string (required) - one of 'pending' | 'approved' | 'rejected'.
+//       Must be 'pending' on create. Only the admin may transition it,
+//       and only pending -> approved or pending -> rejected.
+//   - createdAt: timestamp (required, immutable) - must be request.time
+//       (client uses serverTimestamp()).
+//
+// Collection: bookedSlots
+// Document ID: "{date}_{time}", e.g. "2026-07-15_17:30"
+// Fields:
+//   - date: string ("YYYY-MM-DD")
+//   - time: string ("HH:MM")
+//   - status: string - 'pending' | 'approved'
+// Contains no PII by design (used to grey out taken slots for any
+// authenticated visitor, before they've booked anything themselves).
+// Written only by the onWalkWritten Cloud Function via the Admin SDK,
+// which bypasses these rules entirely -- there is deliberately no
+// client create/update/delete rule for this collection.
+//
+// ===============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        request.auth.token.email == "rohitsm85@gmail.com" &&
+        request.auth.token.email_verified == true;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 200 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateField(d) {
+      return d is string && d.matches("^\\d{4}-\\d{2}-\\d{2}$");
+    }
+
+    function isValidTimeField(t) {
+      return t is string && t.matches("^\\d{2}:\\d{2}$");
+    }
+
+    function isValidStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Domain validator: a newly created walk booking.
+    function isValidNewWalk() {
+      let d = request.resource.data;
+      return hasOnlyAllowedFields(
+               ['userId', 'ownerName', 'dogName', 'email', 'date', 'time', 'notes', 'status', 'createdAt']
+             ) &&
+             hasRequiredFields(
+               ['userId', 'ownerName', 'dogName', 'email', 'date', 'time', 'status', 'createdAt']
+             ) &&
+             d.userId is string && d.userId == request.auth.uid &&
+             isValidStringLength('ownerName', 1, 100) &&
+             isValidStringLength('dogName', 1, 100) &&
+             isValidEmail(d.email) &&
+             isValidDateField(d.date) &&
+             isValidTimeField(d.time) &&
+             (!('notes' in d) || isValidStringLength('notes', 0, 500)) &&
+             d.status == 'pending' &&
+             d.createdAt == request.time;
+    }
+
+    // Domain validator: an admin-driven status transition. Only the
+    // status field may change, and only pending -> approved/rejected.
+    function isValidStatusTransition() {
+      let previousStatus = resource.data.status;
+      let newStatus = request.resource.data.status;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+             previousStatus == 'pending' &&
+             newStatus in ['approved', 'rejected'];
+    }
+
     match /walks/{walkId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth != null && 
-        (request.auth.uid == resource.data.userId ||
-         request.auth.token.email == "rohitsm85@gmail.com");
-      allow update: if request.auth != null &&
-        request.auth.token.email == "rohitsm85@gmail.com";
+      allow create: if isAuthenticated() && isValidNewWalk();
+
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == resource.data.userId || isAdmin());
+
+      allow update: if isAdmin() && isValidStatusTransition();
+
+      allow delete: if false;
+    }
+
+    match /bookedSlots/{slotId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // written only by Cloud Functions (Admin SDK)
     }
   }
 }

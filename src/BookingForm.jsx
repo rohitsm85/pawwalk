@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useBooking } from "./hooks/useBooking";
+import { useBookedSlots } from "./hooks/useBookedSlots";
 
 function getTimeSlots(date) {
   if (!date) return [];
@@ -31,10 +32,13 @@ export default function BookingForm() {
   const [form, setForm] = useState({
     ownerName: "",
     dogName: "",
+    email: "",
     date: "",
     time: "",
     notes: "",
   });
+
+  const takenTimes = useBookedSlots(form.date);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,6 +103,16 @@ export default function BookingForm() {
 
         <input
           style={styles.input}
+          name="email"
+          type="email"
+          placeholder="Your Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          style={styles.input}
           name="date"
           type="date"
           value={form.date}
@@ -117,7 +131,9 @@ export default function BookingForm() {
         >
           <option value="">{form.date ? "Select Time" : "Pick a date first"}</option>
           {slots.map((t) => (
-            <option key={t} value={t}>{formatDisplay(t)}</option>
+            <option key={t} value={t} disabled={takenTimes.has(t)}>
+              {formatDisplay(t)}{takenTimes.has(t) ? " (Booked)" : ""}
+            </option>
           ))}
         </select>
 
