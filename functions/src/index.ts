@@ -164,12 +164,12 @@ export const onWalkWritten = onDocumentWritten(
               "Please try booking another slot.",
           ...(isApproved
             ? {
-                icalEvent: {
-                  filename: "walk.ics",
-                  method: "REQUEST",
-                  content: buildIcs(after),
-                },
-              }
+              icalEvent: {
+                filename: "walk.ics",
+                method: "REQUEST",
+                content: buildIcs(after),
+              },
+            }
             : {}),
         });
       } catch (err) {
