@@ -32,7 +32,8 @@ export function useAdminAuth() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (err) {
-      setError("Login failed. Try again.");
+      console.error("Admin login failed:", err.code, err.message);
+      setError(`Login failed (${err.code || "unknown error"}). Try again.`);
     }
   };
 
