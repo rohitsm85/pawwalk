@@ -16,9 +16,10 @@ rules_version = '2';
 //   - date: string (required, immutable, "YYYY-MM-DD")
 //   - time: string (required, immutable, "HH:MM")
 //   - notes: string (optional, immutable, <=500 chars)
-//   - status: string (required) - one of 'pending' | 'approved' | 'rejected'.
-//       Must be 'pending' on create. Only the admin may transition it,
-//       and only pending -> approved or pending -> rejected.
+//   - status: string (required) - one of 'pending' | 'approved' | 'rejected'
+//       | 'cancelled'. Must be 'pending' on create. The admin may transition
+//       pending -> approved/rejected; the owner may transition their own
+//       pending/approved booking -> cancelled.
 //   - createdAt: timestamp (required, immutable) - must be request.time
 //       (client uses serverTimestamp()).
 //
@@ -111,13 +112,24 @@ service cloud.firestore {
              newStatus in ['approved', 'rejected'];
     }
 
+    // Domain validator: the owner cancelling their own booking. Only the
+    // status field may change, and only pending/approved -> cancelled.
+    function isValidOwnerCancellation() {
+      let previousStatus = resource.data.status;
+      let newStatus = request.resource.data.status;
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+             previousStatus in ['pending', 'approved'] &&
+             newStatus == 'cancelled';
+    }
+
     match /walks/{walkId} {
       allow create: if isAuthenticated() && isValidNewWalk();
 
       allow read: if isAuthenticated() &&
         (request.auth.uid == resource.data.userId || isAdmin());
 
-      allow update: if isAdmin() && isValidStatusTransition();
+      allow update: if (isAdmin() && isValidStatusTransition()) ||
+        (isAuthenticated() && request.auth.uid == resource.data.userId && isValidOwnerCancellation());
 
       allow delete: if false;
     }

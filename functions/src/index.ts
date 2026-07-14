@@ -78,7 +78,7 @@ interface Walk {
   date: string;
   time: string;
   notes?: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "cancelled";
 }
 
 // Keeps the public bookedSlots collection (no PII) in sync with walks,
@@ -101,7 +101,7 @@ export const onWalkWritten = onDocumentWritten(
         .collection("bookedSlots")
         .doc(`${slotSource.date}_${slotSource.time}`);
 
-      if (!after || after.status === "rejected") {
+      if (!after || after.status === "rejected" || after.status === "cancelled") {
         await slotRef.delete().catch((err) => {
           logger.warn("Failed to clear bookedSlots doc", err);
         });
@@ -132,6 +132,23 @@ export const onWalkWritten = onDocumentWritten(
         });
       } catch (err) {
         logger.error("Failed to send admin notification email", err);
+      }
+      return;
+    }
+
+    // Client cancelled -> notify the admin.
+    if (before && after && before.status !== after.status && after.status === "cancelled") {
+      try {
+        await transport.sendMail({
+          from,
+          to: from,
+          subject: `Booking cancelled: ${after.dogName} on ${after.date}`,
+          text:
+            `${after.ownerName} cancelled the walk for ${after.dogName} ` +
+            `on ${after.date} at ${formatDisplayTime(after.time)}.`,
+        });
+      } catch (err) {
+        logger.error("Failed to send cancellation notification email", err);
       }
       return;
     }

@@ -3,6 +3,10 @@ import { useAuth } from "./hooks/useAuth";
 import { useBooking } from "./hooks/useBooking";
 import { useBookedSlots } from "./hooks/useBookedSlots";
 
+function todayString() {
+  return new Date().toISOString().split("T")[0];
+}
+
 function getTimeSlots(date) {
   if (!date) return [];
   const day = new Date(date).getDay(); // 0=Sun, 6=Sat
@@ -15,6 +19,17 @@ function getTimeSlots(date) {
     slots.push(`${String(h).padStart(2, "0")}:00`);
     slots.push(`${String(h).padStart(2, "0")}:30`);
   }
+
+  // For today, drop slots that have already started.
+  if (date === todayString()) {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    return slots.filter((t) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m > nowMinutes;
+    });
+  }
+
   return slots;
 }
 
@@ -26,8 +41,8 @@ function formatDisplay(t) {
 }
 
 export default function BookingForm() {
-  const { user, authReady } = useAuth();
-  const { submitBooking, loading, error, success } = useBooking(user);
+  const { user, authReady, authError } = useAuth();
+  const { submitBooking, cancelBooking, loading, error, success, cancelled } = useBooking(user);
 
   const [form, setForm] = useState({
     ownerName: "",
@@ -62,6 +77,33 @@ export default function BookingForm() {
     </div>
   );
 
+  if (authError) return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <p style={{ textAlign: "center", color: "#e53e3e" }}>
+          Couldn't sign you in ({authError.code || "unknown error"}).
+          Please refresh and try again.
+        </p>
+      </div>
+    </div>
+  );
+
+  if (success && cancelled) return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <div style={styles.successBox}>
+          <p style={{ fontSize: 32 }}>👋</p>
+          <p style={{ fontWeight: 600, fontSize: 18 }}>Booking Cancelled</p>
+          <button style={styles.btn} onClick={() => window.location.reload()}>
+            Book a Walk 🐾
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (success) return (
     <div style={styles.page}>
       <div style={styles.card}>
@@ -70,8 +112,16 @@ export default function BookingForm() {
           <p style={{ fontSize: 32 }}>🐶</p>
           <p style={{ fontWeight: 600, fontSize: 18 }}>Booking Submitted!</p>
           <p style={{ color: "#555", marginTop: 8 }}>We'll confirm your walk shortly.</p>
+          {error && <p style={{ color: "#e53e3e", fontSize: 14, marginTop: 8 }}>{error}</p>}
           <button style={styles.btn} onClick={() => window.location.reload()}>
             Book Another Walk 🐾
+          </button>
+          <button
+            style={{ ...styles.cancelBtn, opacity: loading ? 0.7 : 1 }}
+            onClick={cancelBooking}
+            disabled={loading}
+          >
+            {loading ? "Cancelling..." : "Cancel This Booking"}
           </button>
         </div>
       </div>
@@ -127,9 +177,15 @@ export default function BookingForm() {
           value={form.time}
           onChange={handleChange}
           required
-          disabled={!form.date}
+          disabled={!form.date || slots.length === 0}
         >
-          <option value="">{form.date ? "Select Time" : "Pick a date first"}</option>
+          <option value="">
+            {!form.date
+              ? "Pick a date first"
+              : slots.length === 0
+                ? "No more slots today"
+                : "Select Time"}
+          </option>
           {slots.map((t) => (
             <option key={t} value={t} disabled={takenTimes.has(t)}>
               {formatDisplay(t)}{takenTimes.has(t) ? " (Booked)" : ""}
@@ -206,6 +262,18 @@ const styles = {
     background: "linear-gradient(135deg, #6b82d6, #7c4dab)",
     color: "#fff",
     fontSize: 16,
+    fontWeight: 600,
+    cursor: "pointer",
+    marginTop: 4,
+  },
+  cancelBtn: {
+    width: "100%",
+    padding: "13px",
+    borderRadius: 8,
+    border: "1.5px solid #e53e3e",
+    background: "#fff",
+    color: "#e53e3e",
+    fontSize: 15,
     fontWeight: 600,
     cursor: "pointer",
     marginTop: 4,
