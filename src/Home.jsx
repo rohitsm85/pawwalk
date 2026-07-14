@@ -1,43 +1,24 @@
-const services = [
-  {
-    icon: "🐕",
-    title: "Solo Walks",
-    desc: "One-on-one attention for your pup, tailored to their pace and energy level.",
-  },
-  {
-    icon: "🐾",
-    title: "Half-Hour Slots",
-    desc: "Flexible half-hour bookings that fit around your schedule — mornings, evenings, or weekends.",
-  },
-  {
-    icon: "💌",
-    title: "Booking Updates",
-    desc: "You'll get an email the moment your walk is confirmed, plus a calendar invite so you never miss it.",
-  },
-];
+import { business, gradient, gradientFlat } from "./config";
 
 export default function Home() {
   return (
     <div style={styles.page}>
       <header style={styles.nav}>
-        <span style={styles.logo}>🐾 PawWalk</span>
-        <a href="/book" style={styles.navBtn}>Book a Walk</a>
+        <span style={styles.logo}>{business.emoji} {business.name}</span>
+        <a href="/book" style={{ ...styles.navBtn, background: gradientFlat }}>Book a Walk</a>
       </header>
 
-      <section style={styles.hero}>
-        <p style={styles.heroEmoji}>🐶🦮🐕</p>
-        <h1 style={styles.heroTitle}>Happy walks for happy dogs</h1>
-        <p style={styles.heroSubtitle}>
-          Friendly, reliable dog walking in your neighbourhood. Pick a time
-          slot, book in seconds, and we'll take care of the rest.
-        </p>
-        <a href="/book" style={styles.ctaBtn}>Book a Walk 🐾</a>
+      <section style={{ ...styles.hero, background: gradient }}>
+        <p style={styles.heroEmoji}>{business.heroEmoji}</p>
+        <h1 style={styles.heroTitle}>{business.tagline}</h1>
+        <p style={styles.heroSubtitle}>{business.heroSubtitle}</p>
+        <a href="/book" style={{ ...styles.ctaBtn, color: business.colors.secondary }}>Book a Walk 🐾</a>
       </section>
 
       <section style={styles.services}>
         <h2 style={styles.sectionTitle}>What we offer</h2>
         <div style={styles.cardGrid}>
-          {services.map((s) => (
+          {business.services.map((s) => (
             <div key={s.title} style={styles.card}>
               <div style={styles.cardIcon}>{s.icon}</div>
               <h3 style={styles.cardTitle}>{s.title}</h3>
@@ -50,24 +31,18 @@ export default function Home() {
       <section style={styles.howItWorks}>
         <h2 style={styles.sectionTitle}>How it works</h2>
         <div style={styles.steps}>
-          <div style={styles.step}>
-            <div style={styles.stepNum}>1</div>
-            <p>Pick a date and an open half-hour slot</p>
-          </div>
-          <div style={styles.step}>
-            <div style={styles.stepNum}>2</div>
-            <p>We confirm your booking by email</p>
-          </div>
-          <div style={styles.step}>
-            <div style={styles.stepNum}>3</div>
-            <p>Your pup gets a happy walk!</p>
-          </div>
+          {business.howItWorks.map((step, i) => (
+            <div key={step} style={styles.step}>
+              <div style={{ ...styles.stepNum, background: gradientFlat }}>{i + 1}</div>
+              <p>{step}</p>
+            </div>
+          ))}
         </div>
-        <a href="/book" style={styles.ctaBtnAlt}>Book a Walk 🐾</a>
+        <a href="/book" style={{ ...styles.ctaBtnAlt, background: gradientFlat }}>Book a Walk 🐾</a>
       </section>
 
       <footer style={styles.footer}>
-        <p>🐾 PawWalk — made with love for good dogs</p>
+        <p>{business.emoji} {business.name} — {business.footerNote}</p>
       </footer>
     </div>
   );
@@ -96,7 +71,6 @@ const styles = {
     fontSize: 20,
   },
   navBtn: {
-    background: "linear-gradient(135deg, #6b82d6, #7c4dab)",
     color: "#fff",
     textDecoration: "none",
     padding: "10px 18px",
@@ -107,7 +81,6 @@ const styles = {
   hero: {
     textAlign: "center",
     padding: "64px 20px 56px",
-    background: "linear-gradient(135deg, #6b82d6 0%, #7c4dab 100%)",
     color: "#fff",
   },
   heroEmoji: {
@@ -129,7 +102,6 @@ const styles = {
   ctaBtn: {
     display: "inline-block",
     background: "#fff",
-    color: "#7c4dab",
     textDecoration: "none",
     padding: "14px 32px",
     borderRadius: 10,
@@ -195,7 +167,6 @@ const styles = {
     width: 36,
     height: 36,
     borderRadius: "50%",
-    background: "linear-gradient(135deg, #6b82d6, #7c4dab)",
     color: "#fff",
     display: "flex",
     alignItems: "center",
@@ -205,7 +176,6 @@ const styles = {
   },
   ctaBtnAlt: {
     display: "inline-block",
-    background: "linear-gradient(135deg, #6b82d6, #7c4dab)",
     color: "#fff",
     textDecoration: "none",
     padding: "14px 32px",

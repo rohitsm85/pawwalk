@@ -9,6 +9,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { useAdminAuth } from "./hooks/useAdminAuth";
+import { business, gradient } from "./config";
 
 export default function AdminPanel() {
   const { admin, loading, login, logout, error } = useAdminAuth();
@@ -32,7 +33,7 @@ export default function AdminPanel() {
   if (!admin) return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🐾 PawWalk Admin</h2>
+        <h2 style={styles.title}>{business.emoji} {business.name} Admin</h2>
         <p style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
           Sign in with your admin Google account
         </p>
@@ -53,7 +54,7 @@ export default function AdminPanel() {
       <div style={{ width: "100%", maxWidth: 700, padding: 16 }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ color: "#fff", margin: 0 }}>🐾 PawWalk Admin</h2>
+          <h2 style={{ color: "#fff", margin: 0 }}>{business.emoji} {business.name} Admin</h2>
           <button style={styles.logoutBtn} onClick={logout}>Logout</button>
         </div>
 
@@ -119,7 +120,7 @@ function BookingCard({ booking: b, onUpdate }) {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #6b82d6 0%, #7c4dab 100%)",
+    background: gradient,
     display: "flex",
     flexDirection: "column",
     alignItems: "center",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useBooking } from "./hooks/useBooking";
 import { useBookedSlots } from "./hooks/useBookedSlots";
+import { business, gradient, gradientFlat } from "./config";
 
 function todayString() {
   return new Date().toISOString().split("T")[0];
@@ -13,11 +14,13 @@ function getTimeSlots(date) {
   const isWeekend = day === 0 || day === 6;
 
   const slots = [];
-  const [startH, endH] = isWeekend ? [9, 18] : [17, 20];
+  const { start: startH, end: endH } = isWeekend ? business.hours.weekend : business.hours.weekday;
+  const step = business.slotMinutes;
 
-  for (let h = startH; h < endH; h++) {
-    slots.push(`${String(h).padStart(2, "0")}:00`);
-    slots.push(`${String(h).padStart(2, "0")}:30`);
+  for (let mins = startH * 60; mins < endH * 60; mins += step) {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
   }
 
   // For today, drop slots that have already started.
@@ -80,7 +83,7 @@ export default function BookingForm() {
   if (authError) return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <p style={{ textAlign: "center", color: "#e53e3e" }}>
           Couldn't sign you in ({authError.code || "unknown error"}).
           Please refresh and try again.
@@ -92,7 +95,7 @@ export default function BookingForm() {
   if (success && cancelled) return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <div style={styles.successBox}>
           <p style={{ fontSize: 32 }}>👋</p>
           <p style={{ fontWeight: 600, fontSize: 18 }}>Booking Cancelled</p>
@@ -107,7 +110,7 @@ export default function BookingForm() {
   if (success) return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <div style={styles.successBox}>
           <p style={{ fontSize: 32 }}>🐶</p>
           <p style={{ fontWeight: 600, fontSize: 18 }}>Booking Submitted!</p>
@@ -131,7 +134,7 @@ export default function BookingForm() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🐾 PawWalk</h2>
+        <h2 style={styles.title}>{business.emoji} {business.name}</h2>
 
         <input
           style={styles.input}
@@ -218,7 +221,7 @@ export default function BookingForm() {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #6b82d6 0%, #7c4dab 100%)",
+    background: gradient,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -259,7 +262,7 @@ const styles = {
     padding: "13px",
     borderRadius: 8,
     border: "none",
-    background: "linear-gradient(135deg, #6b82d6, #7c4dab)",
+    background: gradientFlat,
     color: "#fff",
     fontSize: 16,
     fontWeight: 600,

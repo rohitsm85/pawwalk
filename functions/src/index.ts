@@ -5,6 +5,7 @@ import * as logger from "firebase-functions/logger";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import * as nodemailer from "nodemailer";
+import { business } from "./config";
 
 // Match the Firestore database's region (see firebase.json) so the
 // Firestore trigger and function run co-located.
@@ -21,7 +22,7 @@ initializeApp();
 const gmailUser = defineSecret("GMAIL_USER");
 const gmailAppPassword = defineSecret("GMAIL_APP_PASSWORD");
 
-const ADMIN_PANEL_URL = "https://pawwalk-ten.vercel.app/admin";
+const ADMIN_PANEL_URL = business.adminPanelUrl;
 
 function formatDisplayTime(time: string): string {
   const [h, m] = time.split(":").map(Number);
@@ -40,7 +41,7 @@ function buildIcs(walk: {
   const end = new Date(start.getTime() + 30 * 60 * 1000);
   const stampFormat = (d: Date) =>
     d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const uid = `${walk.date}-${walk.time}-${walk.dogName}@pawwalk-2da30`.replace(
+  const uid = `${walk.date}-${walk.time}-${walk.dogName}@${business.slug}`.replace(
     /\s+/g,
     "-"
   );
@@ -48,7 +49,7 @@ function buildIcs(walk: {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//PawWalk//Booking//EN",
+    `PRODID:-//${business.name}//Booking//EN`,
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${stampFormat(new Date())}`,
