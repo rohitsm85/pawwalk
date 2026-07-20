@@ -11,7 +11,9 @@ export function useAuth() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      // Ignore stale anonymous sessions from before Google Sign-In was
+      // required -- treat them as signed out so the login screen shows.
+      setUser(currentUser && !currentUser.isAnonymous ? currentUser : null);
       setAuthReady(true);
     });
     return () => unsub();
