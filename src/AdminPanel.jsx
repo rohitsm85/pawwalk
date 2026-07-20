@@ -14,6 +14,7 @@ import { business, gradient } from "./config";
 export default function AdminPanel() {
   const { admin, loading, login, logout, error } = useAdminAuth();
   const [bookings, setBookings] = useState([]);
+  const [updateError, setUpdateError] = useState(null);
 
   useEffect(() => {
     if (!admin) return;
@@ -25,7 +26,13 @@ export default function AdminPanel() {
   }, [admin]);
 
   const updateStatus = async (id, status) => {
-    await updateDoc(doc(db, "walks", id), { status });
+    setUpdateError(null);
+    try {
+      await updateDoc(doc(db, "walks", id), { status });
+    } catch (err) {
+      console.error("Failed to update booking status:", err.code, err.message);
+      setUpdateError(`Couldn't update booking (${err.code || "unknown error"}).`);
+    }
   };
 
   if (loading) return <div style={styles.page}><p style={{color:"#fff"}}>Loading...</p></div>;
@@ -61,6 +68,12 @@ export default function AdminPanel() {
           </div>
           <button style={styles.logoutBtn} onClick={logout}>Logout</button>
         </div>
+
+        {updateError && (
+          <p style={{ color: "#ffb4b4", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: 8, marginBottom: 16 }}>
+            {updateError}
+          </p>
+        )}
 
         {/* Pending */}
         <h3 style={{ color: "#fff", marginBottom: 12 }}>
