@@ -14,7 +14,7 @@ export function useBooking(user) {
   const [bookingId, setBookingId] = useState(null);
   const [cancelled, setCancelled] = useState(false);
 
-  const submitBooking = async ({ ownerName, dogName, email, date, time, notes }) => {
+  const submitBooking = async ({ ownerName, dogName, email, address, date, time, notes }) => {
     if (!user) return;
 
     if (isInThePast(date, time)) {
@@ -32,6 +32,7 @@ export function useBooking(user) {
         ownerName,
         dogName,
         email,
+        address,
         date,
         time,
         notes: notes || "",

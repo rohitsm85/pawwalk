@@ -33,6 +33,7 @@ export default function AdminPanel() {
   if (!admin) return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <a href="/" style={styles.homeLink}>← Home</a>
         <h2 style={styles.title}>{business.emoji} {business.name} Admin</h2>
         <p style={{ textAlign: "center", color: "#666", marginBottom: 20 }}>
           Sign in with your admin Google account
@@ -54,7 +55,10 @@ export default function AdminPanel() {
       <div style={{ width: "100%", maxWidth: 700, padding: 16 }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h2 style={{ color: "#fff", margin: 0 }}>{business.emoji} {business.name} Admin</h2>
+          <div>
+            <a href="/" style={{ ...styles.homeLink, color: "rgba(255,255,255,0.75)" }}>← Home</a>
+            <h2 style={{ color: "#fff", margin: 0 }}>{business.emoji} {business.name} Admin</h2>
+          </div>
           <button style={styles.logoutBtn} onClick={logout}>Logout</button>
         </div>
 
@@ -95,6 +99,7 @@ function BookingCard({ booking: b, onUpdate }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <p style={{ fontWeight: 700, fontSize: 16 }}>{b.ownerName} — 🐶 {b.dogName}</p>
+          {b.address && <p style={{ color: "#555", marginTop: 2 }}>📍 {b.address}</p>}
           <p style={{ color: "#555", marginTop: 4 }}>📅 {b.date} at {b.time}</p>
           {b.notes && <p style={{ color: "#777", marginTop: 4 }}>📝 {b.notes}</p>}
         </div>
@@ -139,6 +144,13 @@ const styles = {
     fontSize: 24,
     fontWeight: 700,
     marginBottom: 8,
+  },
+  homeLink: {
+    display: "inline-block",
+    fontSize: 13,
+    color: "#888",
+    textDecoration: "none",
+    marginBottom: 4,
   },
   badge: {
     color: "#fff",

@@ -45,6 +45,14 @@ export const business = {
     "We confirm your booking by email",
     "Your pup gets a happy walk!",
   ],
+
+  // Shown on the booking confirmation screen/email. No online payment
+  // processing yet (Stripe is a possible later addition) — just
+  // instructions for how to actually pay. FILL IN the real phone number.
+  payment: {
+    note: "Pay by cash or PayID after the walk.",
+    payIdPhone: "0400 000 000",
+  },
 };
 
 export const gradient = `linear-gradient(135deg, ${business.colors.primary} 0%, ${business.colors.secondary} 100%)`;

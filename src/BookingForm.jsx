@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useBooking } from "./hooks/useBooking";
 import { useBookedSlots } from "./hooks/useBookedSlots";
+import { useMyBookings } from "./hooks/useMyBookings";
 import { business, gradient, gradientFlat } from "./config";
 
 function todayString() {
@@ -43,14 +44,24 @@ function formatDisplay(t) {
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
+const statusLabel = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Declined",
+  cancelled: "Cancelled",
+};
+
 export default function BookingForm() {
-  const { user, authReady, authError } = useAuth();
+  const { user, authReady, authError, login, logout } = useAuth();
   const { submitBooking, cancelBooking, loading, error, success, cancelled } = useBooking(user);
+  const myBookings = useMyBookings(user);
+  const [showHistory, setShowHistory] = useState(false);
 
   const [form, setForm] = useState({
-    ownerName: "",
+    ownerName: user?.displayName || "",
     dogName: "",
-    email: "",
+    email: user?.email || "",
+    address: "",
     date: "",
     time: "",
     notes: "",
@@ -83,6 +94,7 @@ export default function BookingForm() {
   if (authError) return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <a href="/" style={styles.homeLink}>← Home</a>
         <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <p style={{ textAlign: "center", color: "#e53e3e" }}>
           Couldn't sign you in ({authError.code || "unknown error"}).
@@ -92,9 +104,26 @@ export default function BookingForm() {
     </div>
   );
 
+  if (!user) return (
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <a href="/" style={styles.homeLink}>← Home</a>
+        <h2 style={styles.title}>{business.emoji} {business.name}</h2>
+        <p style={{ textAlign: "center", color: "#666", marginBottom: 8 }}>
+          Sign in with Google to book a walk and keep track of your bookings.
+        </p>
+        <button style={styles.googleBtn} onClick={login}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width={20} />
+          Sign in with Google
+        </button>
+      </div>
+    </div>
+  );
+
   if (success && cancelled) return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <a href="/" style={styles.homeLink}>← Home</a>
         <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <div style={styles.successBox}>
           <p style={{ fontSize: 32 }}>👋</p>
@@ -110,11 +139,17 @@ export default function BookingForm() {
   if (success) return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <a href="/" style={styles.homeLink}>← Home</a>
         <h2 style={styles.title}>{business.emoji} {business.name}</h2>
         <div style={styles.successBox}>
           <p style={{ fontSize: 32 }}>🐶</p>
           <p style={{ fontWeight: 600, fontSize: 18 }}>Booking Submitted!</p>
           <p style={{ color: "#555", marginTop: 8 }}>We'll confirm your walk shortly.</p>
+          {business.payment && (
+            <p style={styles.paymentNote}>
+              💳 {business.payment.note} {business.payment.payIdPhone && `PayID: ${business.payment.payIdPhone}`}
+            </p>
+          )}
           {error && <p style={{ color: "#e53e3e", fontSize: 14, marginTop: 8 }}>{error}</p>}
           <button style={styles.btn} onClick={() => window.location.reload()}>
             Book Another Walk 🐾
@@ -134,7 +169,29 @@ export default function BookingForm() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+        <div style={styles.topRow}>
+          <a href="/" style={styles.homeLink}>← Home</a>
+          <button style={styles.signOutBtn} onClick={logout}>Sign out</button>
+        </div>
         <h2 style={styles.title}>{business.emoji} {business.name}</h2>
+
+        {myBookings.length > 0 && (
+          <div style={styles.historyBox}>
+            <button style={styles.historyToggle} onClick={() => setShowHistory((v) => !v)}>
+              {showHistory ? "Hide" : "Show"} My Bookings ({myBookings.length})
+            </button>
+            {showHistory && (
+              <div style={styles.historyList}>
+                {myBookings.map((b) => (
+                  <div key={b.id} style={styles.historyItem}>
+                    <span>{b.date} at {formatDisplay(b.time)} — {b.dogName}</span>
+                    <span style={styles.historyStatus}>{statusLabel[b.status] || b.status}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <input
           style={styles.input}
@@ -160,6 +217,15 @@ export default function BookingForm() {
           type="email"
           placeholder="Your Email"
           value={form.email}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          style={styles.input}
+          name="address"
+          placeholder="Address or area (e.g. near Hornsby Park)"
+          value={form.address}
           onChange={handleChange}
           required
         />
@@ -239,12 +305,31 @@ const styles = {
     flexDirection: "column",
     gap: 12,
   },
+  topRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   title: {
     textAlign: "center",
     fontSize: 26,
     fontWeight: 700,
     margin: "0 0 8px",
     color: "#1a1a2e",
+  },
+  homeLink: {
+    display: "inline-block",
+    fontSize: 13,
+    color: "#888",
+    textDecoration: "none",
+  },
+  signOutBtn: {
+    fontSize: 13,
+    color: "#888",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
   },
   input: {
     width: "100%",
@@ -288,5 +373,60 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: 4,
+  },
+  paymentNote: {
+    fontSize: 13.5,
+    color: "#555",
+    background: "#f5f5f5",
+    borderRadius: 8,
+    padding: "10px 14px",
+    marginTop: 10,
+  },
+  googleBtn: {
+    width: "100%",
+    padding: "12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    border: "1.5px solid #ddd",
+    borderRadius: 8,
+    background: "#fff",
+    cursor: "pointer",
+    fontSize: 15,
+    fontWeight: 600,
+  },
+  historyBox: {
+    border: "1px solid #eee",
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  historyToggle: {
+    width: "100%",
+    padding: "10px 14px",
+    background: "#f7f7fb",
+    border: "none",
+    textAlign: "left",
+    fontSize: 13.5,
+    fontWeight: 600,
+    color: "#444",
+    cursor: "pointer",
+  },
+  historyList: {
+    maxHeight: 160,
+    overflowY: "auto",
+    padding: "6px 14px",
+  },
+  historyItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 13,
+    color: "#555",
+    padding: "6px 0",
+    borderBottom: "1px solid #f0f0f0",
+  },
+  historyStatus: {
+    fontWeight: 600,
+    color: "#888",
   },
 };

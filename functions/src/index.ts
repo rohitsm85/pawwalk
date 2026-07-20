@@ -34,6 +34,7 @@ function formatDisplayTime(time: string): string {
 function buildIcs(walk: {
   dogName: string;
   ownerName: string;
+  address: string;
   date: string;
   time: string;
 }): string {
@@ -56,6 +57,7 @@ function buildIcs(walk: {
     `DTSTART:${stampFormat(start)}`,
     `DTEND:${stampFormat(end)}`,
     `SUMMARY:Dog Walk - ${walk.dogName} (${walk.ownerName})`,
+    `LOCATION:${walk.address}`,
     `DESCRIPTION:Confirmed dog walk booking for ${walk.dogName}\\, owner ${walk.ownerName}.`,
     "END:VEVENT",
     "END:VCALENDAR",
@@ -76,6 +78,7 @@ interface Walk {
   ownerName: string;
   dogName: string;
   email: string;
+  address: string;
   date: string;
   time: string;
   notes?: string;
@@ -128,6 +131,7 @@ export const onWalkWritten = onDocumentWritten(
           text:
             `${after.ownerName} requested a walk for ${after.dogName} ` +
             `on ${after.date} at ${formatDisplayTime(after.time)}.\n` +
+            `Address/area: ${after.address}\n` +
             `Notes: ${after.notes || "(none)"}\n\n` +
             `Approve or reject: ${ADMIN_PANEL_URL}`,
         });
@@ -176,7 +180,7 @@ export const onWalkWritten = onDocumentWritten(
             : `Your walk request for ${after.dogName} was declined`,
           text: isApproved
             ? `Good news! ${after.dogName}'s walk on ${after.date} at ` +
-              `${formatDisplayTime(after.time)} is confirmed. See you then!`
+              `${formatDisplayTime(after.time)} at ${after.address} is confirmed. See you then!`
             : `Sorry, we're unable to confirm ${after.dogName}'s walk on ` +
               `${after.date} at ${formatDisplayTime(after.time)}. ` +
               "Please try booking another slot.",

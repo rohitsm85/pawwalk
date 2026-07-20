@@ -13,6 +13,8 @@ rules_version = '2';
 //   - dogName: string (required, immutable, 1-100 chars)
 //   - email: string (required, immutable, valid email, <=200 chars) -
 //       client's email, used to send booking-outcome notifications.
+//   - address: string (required, immutable, 1-200 chars) - where to meet
+//       for the walk (address or a named area/park).
 //   - date: string (required, immutable, "YYYY-MM-DD")
 //   - time: string (required, immutable, "HH:MM")
 //   - notes: string (optional, immutable, <=500 chars)
@@ -86,15 +88,16 @@ service cloud.firestore {
     function isValidNewWalk() {
       let d = request.resource.data;
       return hasOnlyAllowedFields(
-               ['userId', 'ownerName', 'dogName', 'email', 'date', 'time', 'notes', 'status', 'createdAt']
+               ['userId', 'ownerName', 'dogName', 'email', 'address', 'date', 'time', 'notes', 'status', 'createdAt']
              ) &&
              hasRequiredFields(
-               ['userId', 'ownerName', 'dogName', 'email', 'date', 'time', 'status', 'createdAt']
+               ['userId', 'ownerName', 'dogName', 'email', 'address', 'date', 'time', 'status', 'createdAt']
              ) &&
              d.userId is string && d.userId == request.auth.uid &&
              isValidStringLength('ownerName', 1, 100) &&
              isValidStringLength('dogName', 1, 100) &&
              isValidEmail(d.email) &&
+             isValidStringLength('address', 1, 200) &&
              isValidDateField(d.date) &&
              isValidTimeField(d.time) &&
              (!('notes' in d) || isValidStringLength('notes', 0, 500)) &&

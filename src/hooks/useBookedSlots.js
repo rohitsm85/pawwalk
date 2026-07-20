@@ -10,10 +10,7 @@ export function useBookedSlots(date) {
   const [takenTimes, setTakenTimes] = useState(new Set());
 
   useEffect(() => {
-    if (!date) {
-      setTakenTimes(new Set());
-      return;
-    }
+    if (!date) return;
 
     const q = query(collection(db, "bookedSlots"), where("date", "==", date));
     const unsub = onSnapshot(q, (snap) => {
@@ -22,5 +19,5 @@ export function useBookedSlots(date) {
     return () => unsub();
   }, [date]);
 
-  return takenTimes;
+  return date ? takenTimes : new Set();
 }
